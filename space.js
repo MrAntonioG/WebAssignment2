@@ -1,6 +1,7 @@
 window.onload= function ()
 {
-
+var vid = document.getElementById('vid');
+vid.style.display = "none";
 var canvas = document.getElementById("myCanvas");
 
 var context = canvas.getContext("2d");
@@ -26,6 +27,7 @@ var expsnd = new Audio("exp.wav");
 var enemy = true;
 var godown = false;
 var alivelist = [];
+var bigen = [10,0,false,300]
 var enemylist = [ [50, 0, true,30], [50, 55 , true,30], [50, 110, true,30],[50, 165, true,30],[50, 220, true,30],[50, 275, true,30],[50, 330, true,30],[50, 385, true,30],[50, 440, true,30],[50, 495, true,30],[50, 550, true,30],
 [105, 0, true,20], [105, 55 , true,20], [105, 110, true,20],[105, 165, true,20],[105, 220, true,20],[105, 275, true,20],[105, 330, true,20],[105, 385, true,20],[105, 440, true,20],[105, 495, true,20],[105, 550, true,20],
 [160, 0, true,20], [160, 55 , true,20], [160, 110, true,20],[160, 165, true,20],[160, 220, true,20],[160, 275, true,20],[160, 330, true,20],[160, 385, true,20],[160, 440, true,20],[160, 495, true,20],[160, 550, true,20],
@@ -60,9 +62,17 @@ var barrier = [ [canvas.height-220,60, true],[canvas.height-220,80, true],[canva
 var enright = true;
 
 update();
+
+setTimeout(bigguy, 5000);
+function bigguy(){
+	bigen[2] = true;
+	bigen[0] = 10;
+	bigen[1] = 0;
+}
 function update(){
+	requestAnimationFrame(update);
 if (lives > 0){
-	requestAnimationFrame(update);	
+		
 	context.clearRect ( 0 , 0 , canvas.width, canvas.height );
 
 
@@ -125,7 +135,14 @@ if (lives > 0){
 			enright = true;
 		}
 	}
-	
+	if (bigen[2] == true){
+		bigen[1] = bigen[1] + 1;
+		context.fillStyle = "orange";
+		context.fillRect(bigen[1],bigen[0],80,50);
+		if (bigen[1] >= canvas.width - 80){
+			bigen[2] = false;
+		}
+	}
 	for (i = 0; i < enemylist.length; i++){
 		if (enemylist[i][2] == true){
 			if (enright == true){
@@ -151,32 +168,33 @@ if (lives > 0){
 			}
 			
 			context.fillRect(enemylist[i][1],enemylist[i][0],50,50);
-		}
-		if (xcoord >= enemylist[i][1] && xcoord <= enemylist[i][1] + 50 && ycoord >= enemylist[i][0] && ycoord <= enemylist[i][0] + 50 ||
+			if (xcoord >= enemylist[i][1] && xcoord <= enemylist[i][1] + 50 && ycoord >= enemylist[i][0] && ycoord <= enemylist[i][0] + 50 ||
 			enemylist[i][1] >= xcoord && enemylist[i][1] <= xcoord + 10 && enemylist[i][0] >= ycoord && enemylist[i][0] <= ycoord + 30 ){
-			death();
+				death();
+			}
 		}
-		
-		
 	}
 	aliveens();
 	if(enshot == false ){
 		enemyShot();
 	} else if (enshot == true){
 		enycoord = enycoord + 5;
-		context.fillStyle = "black"; //sets the colour to green
+		context.fillStyle = "black"; //sets the colour to black
 		context.fillRect(enxcoord,enycoord ,10,20);
 		for (i = 0; i < barrier.length; i++){
 			if ( barrier[i][2] == true ){
 					if (enxcoord >=  barrier[i][1] && enxcoord <=  barrier[i][1] + 20 && enycoord >=  barrier[i][0] && enycoord <=  barrier[i][0] + 20 ||
-					 barrier[i][1] >= enxcoord &&  barrier[i][1] <= enxcoord + 10 &&  barrier[i][0] >= enycoord &&  barrier[i][0] <= enycoord + 20 
-					){
+					 barrier[i][1] >= enxcoord &&  barrier[i][1] <= enxcoord + 10 &&  barrier[i][0] >= enycoord &&  barrier[i][0] <= enycoord + 20){
 						barrier[i][2] = false;
 						enshot = false;
 					}
 				}
 		}
-		
+		if (xcoord >= enxcoord && xcoord <= enxcoord + 10 && ycoord >= enycoord && ycoord <= enycoord + 20 ||
+			enxcoord >= xcoord && enxcoord <= xcoord + 50 && enycoord >= ycoord && enycoord <= ycoord + 50 ){
+			death();
+			enshot = false;
+		}
 		if (enycoord >= canvas.height-20){
 			enshot = false;
 		}
@@ -201,7 +219,16 @@ if (lives > 0){
 						}
 					}
 			}
-		
+			if (bigen[2] == true ){
+					if (bulxcoord >= bigen[1] && bulxcoord <= bigen[1] + 80 && bulycoord >= bigen[0] && bulycoord <= bigen[0] + 50 ||
+					bigen[1] >= bulxcoord && bigen[1] <= bulxcoord + 10 && bigen[0] >= bulycoord && bigen[0] <= bulycoord + 30 
+					){
+						bigen[2] = false;
+						shot = false;
+						score = score + bigen[3];
+						expsnd.play();
+					}
+				}
 			
 			for (i = 0; i < enemylist.length; i++){
 				if (enemylist[i][2] == true ){
@@ -236,6 +263,12 @@ if (lives > 0){
 	}
 	context.fillText("Lives: ", canvas.width - (60 + (25 * 5)), canvas.height - 20); 
 	context.stroke;
+} else if (lives <= 0){
+	if (!vid.ended){
+		viddraw();
+	} else {
+		window.location.reload();
+	}
 }
 }
 function enemiesDead(){
@@ -245,10 +278,20 @@ function death(){
 	lives = lives - 1;
 	xcoord = canvas.width/2;
 	if (lives == 0){
-		context.font = "50px Arial";
-		context.fillStyle = "red";
-		context.fillText("Game Over", canvas.width/2, canvas.height/2); 
+		context.font = "100px Arial bold";
+		context.fillStyle = "black";
+		context.fillText("Game Over", canvas.width/2 - 230, 150); 
+		//vid.style.display = "block";
+		vid.play();
+		viddraw();
+		
+		
 	}
+	
+}
+function viddraw(){
+	context.drawImage(vid, canvas.width/2 - 320, canvas.height/2 - 240, 640, 480);
+	
 	
 }
 function aliveens(){
@@ -306,7 +349,7 @@ function upkey(evt) { //Key is let go
 
 function downkey(evt) { //Key is being held down
 	switch (evt.keyCode) {
-		case 32: //Left Arrow Key
+		case 32: //Up Arrow Key
 		if (shot == false){
 			bulxcoord = xcoord + 20;
 			bulycoord = canvas.height - 125;
@@ -320,7 +363,8 @@ function downkey(evt) { //Key is being held down
 		case 37: //Left Arrow Key
 		left = true;
 		break;
-
+		
+		
 		case 39: //right arrow key
 		right = true;
 		break;
